@@ -42,35 +42,80 @@ sand_req <- function(om_now, om_goal, depth, om_rate) {
   }
   sand_mm <- ((depth * 10) / 100) * i   # adjust this by depth
   
-  ifelse(i == 1, sand_mm <-0, sand_mm <- sand_mm)
+  ifelse(i == 1, sand_mm <- 0, sand_mm <- sand_mm)
   return(sand_mm)    
 }
 
-
-
-
 server <- function(input, output, session) {
  
+  ## om accumulation rate
   output$text1 <- renderText({ 
     
-    rate <- accum_rate(input$topdressing, input$depth, input$om1, input$om2)
+    years <- as.numeric((input$date[2] - input$date[1]) / 365)
+    rate <- accum_rate(input$topdressing, input$depth, input$om1, input$om2) / years
     
-    # fert requirement = Required - amount present
-    # fert = guideline + plant harvest - soil test
-    # note, added 1 g to fert requirement to be sure not to
-    # underestimate due to rounding effects
-    # plant harvest is annual N / kratio
-    # convert all to g/m2 by the 6.7 factor based on 10 cm
-    # deep rootzone with bulk density of 1.5
-    
-   
-    
-    paste("If you apply", input$topdressing, "mm of sand
+    paste("If you apply ", input$topdressing, " mm of sand
           to a ", input$depth, " cm layer of the rootzone with a starting OM of ", input$om1, 
-          "% and ending OM of", input$om2, "the accumulation rate of OM is",
-          round(rate, 1), "grams OM per kg of soil.")
+          "% on ", as.Date(input$date[1]), " and ending OM of ", input$om2, "% on ", 
+          as.Date(input$date[2]), ", the accumulation rate of total organic material is ",
+          round(rate, 1), " grams OM per kg of soil per year.", sep = "")
          
   })
   
+  output$rate <- renderUI({
+    years <- as.numeric((input$date[2] - input$date[1]) / 365)
+    rate <- round(accum_rate(input$topdressing, input$depth, input$om1, input$om2) / years, digits = 1)
+    
+    tagList(
+      numericInput(
+        "depth_sand",
+        "Depth of soil layer (cm)",
+        min = 1,
+        max = 20,
+        value = input$depth,
+        step = 0.1,
+        width = "100px"
+      ),
+      numericInput(
+        "om_now_input",
+        "Current OM %",
+        min = 0,
+        max = 30,
+        value = input$om2,
+        step = 0.1,
+        width = "100px"
+      ),
+      numericInput(
+        "om_want",
+        label = "Desired OM %",
+        min = 0,
+        max = 30,
+        value = input$om2,
+        step = 0.1,
+        width = "100px"
+      ),
+    numericInput(
+      "accum_rate",
+      label = "Site-specific OM accumulation rate (g/kg/year)",
+      min = 0,
+      max = 100,
+      value = rate,
+      step = 1,
+      width = "120px"
+    ),
+    )
+  })
+  
+  ## sand req, adjusted by days
+  output$text2 <- renderText({
+    
+    years_from_now <- as.numeric(input$future_date - today()) / 365
+    
+    sand_mm <- sand_req(input$om_now_input, input$om_want, input$depth_sand, 
+                        input$accum_rate / years_from_now)
+    
+    round(sand_mm, digits = 2)
+  })
   
 }
+
