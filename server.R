@@ -108,18 +108,6 @@ server <- function(input, output, session) {
       
     })
   
-  # observe({
-  #   if (input$om_want > input$om_now_input)
-  #     showModal(
-  #       modalDialog(
-  #         title = "Caution: target OM is greater than current OM",
-  #         "I haven't made exact calculations for this case, so you may not reach the level of target OM on the target date.",
-  #         easyClose = TRUE,
-  #         footer = NULL
-  #       )
-  #     )
-  # })
-  
   observe({
     if (input$date[1] >= input$date[2])
       showModal(

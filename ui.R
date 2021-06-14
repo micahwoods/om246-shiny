@@ -4,7 +4,7 @@ library(lubridate)
 library(markdown)
 
 ui <- (fluidPage(
-  ## This is for embedding in an iframe on my website that will resize
+  ## This is for embedding in an iframe that will resize
   ## automatically to the app window size
   tags$head(
     tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.1/iframeResizer.contentWindow.js",

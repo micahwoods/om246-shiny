@@ -1,6 +1,8 @@
 ### OM246 testing and the calculations
 
-This app makes calculations for total organic material measured by what I call OM246. You can see more details at the [OM246 project page](https://www.asianturfgrass.com/project/om246/) on the ATC website. This is a simple test, with two key features:
+This app[^1] makes calculations for total organic material measured by what I call OM246. You can see more details at the [OM246 project page](https://www.asianturfgrass.com/project/om246/) on the ATC website. This is a simple test, with two key features:
+
+[^1]: <https://asianturfgrass.shinyapps.io/om246/>
 
 * the depth of the sample is known
 * all the organic material is burned, with no screening or subsampling of the sample at the lab to remove undecomposed plant material
