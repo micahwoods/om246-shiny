@@ -22,36 +22,44 @@ accum_rate <- function(sand, depth, om1, om2) {
   return(accum_rate)
 }
 
-## function for topdressing amount
-## I adjust this to account for time, om_rate is g/kg/per year
-sand_req <-
-  function(om_now,
-           om_goal,
-           depth,
-           om_rate,
-           now_date,
-           target_date) {
-    # om rate set to be on a per day basis
-    rate_daily <- om_rate / 365
+sand_req <- function(om_now, 
+                     om_goal, 
+                     depth, 
+                     om_rate,
+                     now_date,
+                     target_date) {
+  
+  years <- as.numeric(target_date - now_date) / 365
+  
+  if ((om_goal * 10 - om_rate) < om_now * 10) {
     
-    number_of_days <- as.numeric(target_date - now_date)
-    
-    ## om mass at end of time duration in g/kg if nothing done
-    om_mass_nothing <- (om_now * 10 +
-                          (rate_daily * number_of_days))
-    
-    mass_nothing <- 100 ^ 2 * depth * bulk_density(om_mass_nothing / 10)
-    om_mass_max <- om_mass_nothing / 1000 * mass_nothing
-    
-    for (i in 1:100) {
-      om_step <- (om_mass_max * (1 - i / 100)) /
-        (mass_nothing * (1 - i / 100) +
-           (100 ^ 2 * depth * (i / 100) * 1.56)) * 100
-      if (om_step <= om_goal)
-        break
+    sand_root <- function(sand) {
+      # Calculate the initial mass and organic matter content
+      start_mass <- 100 ^ 2 * depth * bulk_density(om_now)  # mass in g/cm^2
+      start_om_g <- (om_now * 10) * (start_mass / 1000)     # OM in grams
+      
+      # Fraction of the original depth remaining after sand addition
+      fraction_remaining <- ((depth * 10) - sand) / (depth * 10)
+      
+      # Calculate the end organic matter content
+      end_mass <- fraction_remaining * start_mass + (sand * 1.56 * 1000)
+      end_om_g <- fraction_remaining * start_om_g
+      end_om_gkg <- (end_om_g / end_mass) * 1000 + (om_rate * years)       # OM in g/kg
+      
+      # Delta between desired OM and resultant OM
+      delta2 <- end_om_gkg - (om_goal * 10)
+      return(delta2)  # Root is when delta2 = 0
     }
-    sand_mm <- ((depth * 10) / 100) * i   # adjust this by depth
     
-    ifelse(i == 1, sand_mm <- 0, sand_mm <- sand_mm)
-    return(sand_mm)
+    # Solve for the amount of sand needed to make delta2 zero
+    result <- uniroot(
+      sand_root,
+      lower = 0,                               # Minimum sand added
+      upper = depth * 10,                      # Maximum sand (depth in cm * 10 for g/cm^2)
+      tol = 1e-6                               # Tolerance for solution
+    )
+    
+    sand_mm <- result$root 
+    return(sand_mm)  # Return the sand amount required
   }
+}

@@ -59,7 +59,7 @@ ui <- (fluidPage(
                    "Starting OM %",
                    min = 0,
                    max = 30,
-                   value = 6.7,
+                   value = 3.2,
                    step = 0.1,
                    width = "100px"
                  ),
@@ -68,7 +68,7 @@ ui <- (fluidPage(
                    label = "Ending OM %",
                    min = 0,
                    max = 30,
-                   value = 7.1,
+                   value = 3.2,
                    step = 0.1,
                    width = "100px"
                  ),
@@ -108,8 +108,25 @@ ui <- (fluidPage(
                ),
                
                mainPanel(br(),
-                         htmlOutput(outputId = "text2"))
+                         htmlOutput(outputId = "text2"),
+                         br(),
+                         helpText("There will be seasonal changes in accumulation rate. The calculations in this app are designed for use with annual accumulation rates and annual sand amounts."))
              )),
+    
+    ## convert between mm and mass units
+    tabPanel(title = "Unit conversions",
+             sidebarLayout(
+               sidebarPanel(
+                 uiOutput("unit"),  
+                 uiOutput("sand_to_convert"), 
+                 helpText("Select desired measurement unit and choose an amount of sand to see the amount in other measuement units.")
+               ),
+               mainPanel(
+                 tableOutput("convert_table"),   
+                 helpText("The conversions are made based on a a sand bulk density of 1.56 g/cm³")
+               )
+             )
+             ),
     
     ## tabpanel for more info
     tabPanel(title = "Details",
