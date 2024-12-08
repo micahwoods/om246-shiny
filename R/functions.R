@@ -22,6 +22,7 @@ accum_rate <- function(sand, depth, om1, om2) {
   return(accum_rate)
 }
 
+## solves for sand req given user-specified inputs
 sand_req <- function(om_now, 
                      om_goal, 
                      depth, 
@@ -32,34 +33,42 @@ sand_req <- function(om_now,
   years <- as.numeric(target_date - now_date) / 365
   
   if ((om_goal * 10 - om_rate) < om_now * 10) {
-    
     sand_root <- function(sand) {
-      # Calculate the initial mass and organic matter content
-      start_mass <- 100 ^ 2 * depth * bulk_density(om_now)  # mass in g/cm^2
-      start_om_g <- (om_now * 10) * (start_mass / 1000)     # OM in grams
+      start_mass <- 100 ^ 2 * depth * bulk_density(om_now)  
+      start_om_g <- (om_now * 10) * (start_mass / 1000)     
       
-      # Fraction of the original depth remaining after sand addition
       fraction_remaining <- ((depth * 10) - sand) / (depth * 10)
-      
-      # Calculate the end organic matter content
+    
       end_mass <- fraction_remaining * start_mass + (sand * 1.56 * 1000)
       end_om_g <- fraction_remaining * start_om_g
-      end_om_gkg <- (end_om_g / end_mass) * 1000 + (om_rate * years)       # OM in g/kg
+      end_om_gkg <- (end_om_g / end_mass) * 1000 + (om_rate * years)      
       
-      # Delta between desired OM and resultant OM
+     
       delta2 <- end_om_gkg - (om_goal * 10)
       return(delta2)  # Root is when delta2 = 0
     }
-    
-    # Solve for the amount of sand needed to make delta2 zero
-    result <- uniroot(
+     # Solve for the amount of sand needed to make delta2 zero
+    result <- tryCatch({
+      uniroot(
       sand_root,
-      lower = 0,                               # Minimum sand added
-      upper = depth * 10,                      # Maximum sand (depth in cm * 10 for g/cm^2)
-      tol = 1e-6                               # Tolerance for solution
+      lower = 0,                               
+      upper = depth * 10,                      
+      tol = 1e-6                               
     )
+    }, warning = function(w) {
+      return(NULL)
+    }, error = function(e) {
+      return(NULL)
+    })
     
-    sand_mm <- result$root 
-    return(sand_mm)  # Return the sand amount required
-  }
+    if (is.null(result)) {
+      return("This result is not possible with the given starting parameters.")
+    } else {
+      sand_mm <- result$root 
+      return(sand_mm) 
+    }
+} else {
+  return("This result is not possible with the given starting parameters.")
 }
+}
+

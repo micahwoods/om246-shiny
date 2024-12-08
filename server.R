@@ -98,26 +98,33 @@ server <- function(input, output, session) {
           input$om_want,
           input$depth_sand,
           input$accum_rate,
-          input$date[2],
-          input$future_date
+          input$future_date[1],
+          input$future_date[2]
         )
-      paste(
-        "Adding ",
-        tags$strong(round(sand_mm, digits = 1),
-                    "mm of sand "),
-        "to the ",
-        input$depth_sand,
-        " cm depth by ",
-        input$future_date,
-        " will result in a total organic matter content of ",
-        input$om_want,
-        "%",
-        " if the accumulation rate remains at ",
-        round(input$accum_rate, digits = 2),
-        " g/kg/year.",
-        sep = ""
-      )
       
+      # Display the result or the message
+      if (is.character(sand_mm)) {
+        return(sand_mm)  # Error message
+      } else {
+        return( 
+          paste(
+          "Adding ",
+          tags$strong(round(sand_mm, digits = 1),
+                      "mm of sand "),
+          "to the ",
+          input$depth_sand,
+          " cm depth by ",
+          input$future_date[2],
+          " will result in a total organic matter content of ",
+          input$om_want,
+          "%",
+          " if the accumulation rate remains at ",
+          round(input$accum_rate, digits = 2),
+          " g/kg/year.",
+          sep = ""
+        )
+        )
+      }
     })
   
 
@@ -153,7 +160,6 @@ server <- function(input, output, session) {
       value <- if (is.null(input$sand_to_convert)) default_value else round(as.numeric(input$sand_to_convert), 1)
     }
     
-    # Simplified label without redundancy
     numericInput("sand_to_convert", 
                  label = "Enter sand quantity:", 
                  value = value, 
@@ -190,13 +196,12 @@ server <- function(input, output, session) {
     
     # Apply formatting to each unit
     formatted_conversions <- c(
-      "mm" = sprintf("%.1f", conversions["mm"]),  # One decimal place
-      "kg" = round(conversions["kg"]),      # Integer
-      "lbs" = round(conversions["lbs"]),  # Integer
-      "ft" = sprintf("%.1f", conversions["ft"])  # One decimal place
+      "mm" = sprintf("%.1f", conversions["mm"]), 
+      "kg" = round(conversions["kg"]),     
+      "lbs" = round(conversions["lbs"]), 
+      "ft" = sprintf("%.1f", conversions["ft"])  
     )
     
-    # Create a dataframe for display
     data.frame(
       Unit = c("mm", "kg/ha", "lbs/1000 ft²", "ft³/1000 ft²"),
       Value = formatted_conversions,
@@ -205,3 +210,4 @@ server <- function(input, output, session) {
   }, sanitize.text.function = identity)
 
 }
+

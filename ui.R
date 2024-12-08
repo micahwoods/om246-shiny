@@ -92,26 +92,27 @@ ui <- (fluidPage(
     
     ## topdressing requirement
     tabPanel(title = "Sand requirement",
+             value = "sand_req_tab",
              sidebarLayout(
                sidebarPanel(
                  # use the input from the accumulation rate panel to fill in here
                  uiOutput("rate"),
                  
-                 dateInput(
+                 dateRangeInput(
                    inputId = "future_date",
-                   label = "Date to achieve desired OM %",
-                   value = today() + years(1),
-                   min = today(),
-                   width = "150px"
+                   label = "Date range over which sand will be applied to reach desired OM %",
+                   start = today(),
+                   end = today() + years(1)
                  ),
                  
                ),
                
                mainPanel(br(),
                          htmlOutput(outputId = "text2"),
-                         br(),
-                         helpText("There will be seasonal changes in accumulation rate. The calculations in this app are designed for use with annual accumulation rates and annual sand amounts."))
-             )),
+               
+                        br(),
+                       helpText("The calculation assumes constant accumulation rate through the year. That is, the app takes the annual rate and adjusts it for number of days being calculated. For additional information, see the Details tab and check the equations on GitHub."),
+               ))),
     
     ## convert between mm and mass units
     tabPanel(title = "Unit conversions",
@@ -123,13 +124,14 @@ ui <- (fluidPage(
                ),
                mainPanel(
                  tableOutput("convert_table"),   
-                 helpText("The conversions are made based on a a sand bulk density of 1.56 g/cm³")
+                 helpText("The conversions are made based on a sand bulk density of 1.56 g/cm³")
                )
              )
              ),
     
-    ## tabpanel for more info
+    ## More info here
     tabPanel(title = "Details",
+             value = "details",
              includeMarkdown("README.md"))
   )
 ))
