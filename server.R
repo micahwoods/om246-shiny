@@ -143,16 +143,19 @@ server <- function(input, output, session) {
 
   # conversion table: convert input to mm first, then to all units
   output$convert_table <- renderTable({
-    req(input$sand_to_convert, input$unit)
+    req(input$sand_to_convert, input$unit, input$bulk_density)
 
+    bd <- as.numeric(input$bulk_density)
     value <- as.numeric(input$sand_to_convert)
+    # lbs/1000 ft² per mm, scaled from the 1.56 g/cm³ baseline
+    lbs_factor <- (319.2159 / 1.56) * bd
     mm <- switch(input$unit,
       "mm"   = value,
-      "kg"   = value / 15600,
-      "t"    = value / 15.6,
-      "lbs"  = value / 319.2159,
+      "kg"   = value / (bd * 10000),
+      "t"    = value / (bd * 10),
+      "lbs"  = value / lbs_factor,
       "ft"   = value / 3.280733,
-      "tons" = value / (319.2159 * 43.56 / 2000)
+      "tons" = value / (lbs_factor * 43.56 / 2000)
     )
 
     data.frame(
@@ -164,11 +167,11 @@ server <- function(input, output, session) {
                "short tons/acre (US tons)"),
       Value = c(
         sprintf("%.1f",  mm),
-        as.character(round(mm * 15600)),
-        sprintf("%.1f",  mm * 15.6),
-        as.character(round(mm * 319.2159)),
+        as.character(round(mm * bd * 10000)),
+        sprintf("%.1f",  mm * bd * 10),
+        as.character(round(mm * lbs_factor)),
         sprintf("%.1f",  mm * 3.280733),
-        sprintf("%.2f",  mm * 319.2159 * 43.56 / 2000)
+        sprintf("%.2f",  mm * lbs_factor * 43.56 / 2000)
       ),
       stringsAsFactors = FALSE
     )

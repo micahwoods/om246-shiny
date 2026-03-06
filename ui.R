@@ -135,11 +135,19 @@ ui <- (fluidPage(
                               label = "Enter sand quantity:",
                               value = 1,
                               step = 0.1),
+                 numericInput(
+                   "bulk_density",
+                   label = "Sand bulk density (g/cm³):",
+                   value = 1.56,
+                   min = 1.3,
+                   max = 1.9,
+                   step = 0.01,
+                   width = "100px"
+                 ),
                  helpText("Select desired measurement unit and choose an amount of sand to see the amount in other measurement units.")
                ),
                mainPanel(
-                 tableOutput("convert_table"),
-                 helpText("The conversions are made based on a sand bulk density of 1.56 g/cm³")
+                 tableOutput("convert_table")
                )
              )
              ),
