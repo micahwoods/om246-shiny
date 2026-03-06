@@ -87,7 +87,9 @@ ui <- (fluidPage(
                ),
                
                mainPanel(br(),
-                         htmlOutput(outputId = "text1"),)
+                         htmlOutput(outputId = "text1"),
+                        
+                         )
              )),
     
     ## topdressing requirement
@@ -111,19 +113,32 @@ ui <- (fluidPage(
                          htmlOutput(outputId = "text2"),
                
                         br(),
-                       helpText("The calculation assumes constant accumulation rate through the year. That is, the app takes the annual rate and adjusts it for number of days being calculated. For additional information, see the Details tab and check the equations on GitHub."),
+                       helpText("The calculation assumes constant accumulation rate through the year. That is, the app takes the annual rate and adjusts it for number of days being calculated. For additional information, see the Details tab."),
                ))),
     
     ## convert between mm and mass units
     tabPanel(title = "Unit conversions",
              sidebarLayout(
                sidebarPanel(
-                 uiOutput("unit"),  
-                 uiOutput("sand_to_convert"), 
-                 helpText("Select desired measurement unit and choose an amount of sand to see the amount in other measuement units.")
+                 selectInput(
+                   "unit",
+                   label = "Select unit for sand quantity:",
+                   choices = c("millimeters (mm)" = "mm",
+                               "kilograms per hectare (kg/ha)" = "kg",
+                               "metric tons per hectare (t/ha)" = "t",
+                               "pounds per 1000 ft² (lbs/1000 ft²)" = "lbs",
+                               "cubic feet per 1000 ft² (ft³/1000 ft²)" = "ft",
+                               "short tons per acre (US tons/acre)" = "tons"),
+                   selected = "mm"
+                 ),
+                 numericInput("sand_to_convert",
+                              label = "Enter sand quantity:",
+                              value = 1,
+                              step = 0.1),
+                 helpText("Select desired measurement unit and choose an amount of sand to see the amount in other measurement units.")
                ),
                mainPanel(
-                 tableOutput("convert_table"),   
+                 tableOutput("convert_table"),
                  helpText("The conversions are made based on a sand bulk density of 1.56 g/cm³")
                )
              )

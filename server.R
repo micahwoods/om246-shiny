@@ -128,83 +128,48 @@ server <- function(input, output, session) {
     })
   
 
-  ## choose the unit of sand quantity
-  output$unit<- renderUI({
-    selectInput(
-      "unit",
-      label = "Select unit for sand quantity:",
-      choices = c("millimeters (mm)" = "mm",
-                  "kilograms per hectare (kg/ha)" = "kg",
-                  "pounds per 1000 ft² (lbs/1000 ft²)" = "lbs",
-                  "cubic feet per 1000 ft² (ft³/1000 ft²)" = "ft"),
-      selected = "mm" 
+  ## update step size when unit changes, without rebuilding the input widget
+  observeEvent(input$unit, {
+    step <- switch(input$unit,
+      "mm"   = 0.1,
+      "kg"   = 1,
+      "t"    = 0.1,
+      "lbs"  = 1,
+      "ft"   = 0.1,
+      "tons" = 0.1
     )
+    updateNumericInput(session, "sand_to_convert", step = step)
   })
-  
-  ## enter the sand amount and adjust precision based on units
-  output$sand_to_convert <- renderUI({
-    req(input$unit)
-    
-    selected_unit <- input$unit
-    step <- 0.1  
-    default_value <- 1  
-    
-    if (selected_unit == "mm") {
-      step <- 0.1
-      value <- if (is.null(input$sand_to_convert)) default_value else round(as.numeric(input$sand_to_convert), 1)
-    } else if (selected_unit %in% c("kg", "lbs")) {
-      step <- 1
-      value <- if (is.null(input$sand_to_convert)) default_value else round(as.numeric(input$sand_to_convert))
-    } else if (selected_unit == "ft") {
-      step <- 0.1
-      value <- if (is.null(input$sand_to_convert)) default_value else round(as.numeric(input$sand_to_convert), 1)
-    }
-    
-    numericInput("sand_to_convert", 
-                 label = "Enter sand quantity:", 
-                 value = value, 
-                 step = step)
-  })
-  
-   # conversion table
+
+  # conversion table: convert input to mm first, then to all units
   output$convert_table <- renderTable({
-    req(input$sand_to_convert)
-    
+    req(input$sand_to_convert, input$unit)
+
     value <- as.numeric(input$sand_to_convert)
-    unit <- input$unit
-    
-    # conversion equations
-    conversions <- switch(
-      unit,
-      "mm" = c("mm" = value, 
-               "kg" = value * 15600, 
-               "lbs" = value * 319.2159, 
-               "ft" = value * 3.280733),
-      "kg" = c("mm" = value / 15600, 
-               "kg" = value, 
-               "lbs" = value * (1/.454) / 107.639, 
-               "ft" = value / 15600 * 3.280733),
-      "lbs" = c("mm" = value / 319.2159, 
-                "kg" = value / 319.2159 * 15600, 
-                "lbs" = value, 
-                "ft" = value / 319.2159 * 3.280733),
-      "ft" = c("mm" = value / 3.280733, 
-               "kg" = value / 3.280733 * 15600, 
-               "lbs" = value / 3.280733 * 319.2159, 
-               "ft" = value)
+    mm <- switch(input$unit,
+      "mm"   = value,
+      "kg"   = value / 15600,
+      "t"    = value / 15.6,
+      "lbs"  = value / 319.2159,
+      "ft"   = value / 3.280733,
+      "tons" = value / (319.2159 * 43.56 / 2000)
     )
-    
-    # Apply formatting to each unit
-    formatted_conversions <- c(
-      "mm" = sprintf("%.1f", conversions["mm"]), 
-      "kg" = round(conversions["kg"]),     
-      "lbs" = round(conversions["lbs"]), 
-      "ft" = sprintf("%.1f", conversions["ft"])  
-    )
-    
+
     data.frame(
-      Unit = c("mm", "kg/ha", "lbs/1000 ft²", "ft³/1000 ft²"),
-      Value = formatted_conversions,
+      Unit = c("mm",
+               "kg/ha",
+               "t/ha (metric tons)",
+               "lbs/1000 ft\u00b2",
+               "ft\u00b3/1000 ft\u00b2",
+               "short tons/acre (US tons)"),
+      Value = c(
+        sprintf("%.1f",  mm),
+        as.character(round(mm * 15600)),
+        sprintf("%.1f",  mm * 15.6),
+        as.character(round(mm * 319.2159)),
+        sprintf("%.1f",  mm * 3.280733),
+        sprintf("%.2f",  mm * 319.2159 * 43.56 / 2000)
+      ),
       stringsAsFactors = FALSE
     )
   }, sanitize.text.function = identity)
